@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3 text-center">
+        <h1 class="display-4 mb-4">Inventory Management System</h1>
+        <p class="lead">
+            A comprehensive solution for tracking inventory, managing listings across multiple platforms, and analyzing sales performance.
+        </p>
+        <div class="mt-5">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-sign-in-alt me-2"></i>Login
+            </a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-user-plus me-2"></i>Register
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="fas fa-box fa-3x text-primary mb-3"></i>
+                <h3 class="card-title">Inventory Tracking</h3>
+                <p class="card-text">
+                    Keep track of your inventory with detailed product information, quantities, and locations.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="fas fa-tags fa-3x text-primary mb-3"></i>
+                <h3 class="card-title">Multi-Platform Sales</h3>
+                <p class="card-text">
+                    Manage listings across multiple sales platforms like eBay, Craigslist, and more.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                <h3 class="card-title">Sales Analytics</h3>
+                <p class="card-text">
+                    Analyze your sales performance with detailed reports and visualizations.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

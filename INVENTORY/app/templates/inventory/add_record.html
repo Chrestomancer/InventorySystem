@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Add Inventory Record - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Add Inventory Record</h1>
+    <a href="{{ url_for('inventory.view_item', item_id=item.id) }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Item
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Add Inventory for {{ item.name }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('inventory.add_inventory_record', item_id=item.id) }}" class="needs-validation" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" min="1" value="1" required>
+                        <div class="invalid-feedback">
+                            Please enter a valid quantity (minimum 1).
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location" placeholder="e.g., Warehouse A, Shelf B3">
+                        <small class="text-muted">Optional: Specify where this inventory is stored</small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('inventory.view_item', item_id=item.id) }}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add Inventory
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Item Details Card -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Item Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-2">
+                    <div class="col-md-3 fw-bold">Name:</div>
+                    <div class="col-md-9">{{ item.name }}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-3 fw-bold">SKU:</div>
+                    <div class="col-md-9">{{ item.sku }}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-3 fw-bold">Condition:</div>
+                    <div class="col-md-9">{{ item.condition }}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-3 fw-bold">Cost Price:</div>
+                    <div class="col-md-9">${{ "%.2f"|format(item.cost_price) }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 fw-bold">Current Quantity:</div>
+                    <div class="col-md-9">{{ item.current_quantity() }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

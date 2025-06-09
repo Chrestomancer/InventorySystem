@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Sales Dashboard - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">
+            <i class="fas fa-chart-line me-2"></i>Sales Dashboard
+        </h1>
+        <div>
+            <a href="{{ url_for('sales.index') }}" class="btn btn-outline-primary">
+                <i class="fas fa-tags me-2"></i>View All Listings
+            </a>
+        </div>
+    </div>
+
+    <!-- Sales Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Total Sales</h5>
+                    <h2 class="display-6">{{ total_sales | currency }}</h2>
+                </div>
+                <div class="card-footer d-flex align-items-center">
+                    <i class="fas fa-dollar-sign me-2"></i>
+                    <span>Lifetime sales revenue</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Total Profit</h5>
+                    <h2 class="display-6">{{ total_profit | currency }}</h2>
+                </div>
+                <div class="card-footer d-flex align-items-center">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    <span>Net profit after expenses</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Active Listings</h5>
+                    <h2 class="display-6">{{ active_listings }}</h2>
+                </div>
+                <div class="card-footer d-flex align-items-center">
+                    <i class="fas fa-tag me-2"></i>
+                    <span>Currently for sale</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-secondary text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Sold Items</h5>
+                    <h2 class="display-6">{{ sold_listings }}</h2>
+                </div>
+                <div class="card-footer d-flex align-items-center">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span>Completed sales</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Recent Transactions</h5>
+        </div>
+        <div class="card-body">
+            {% if recent_transactions %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Platform</th>
+                            <th>Sale Price</th>
+                            <th>Profit</th>
+                            <th>Date Sold</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in recent_transactions %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('inventory.view_item', item_id=transaction.listing.item.id) }}">
+                                    {{ transaction.listing.item.name }}
+                                </a>
+                            </td>
+                            <td>{{ transaction.listing.platform.name }}</td>
+                            <td>{{ transaction.final_sale_price | currency }}</td>
+                            <td>
+                                {% set profit = transaction.calculate_profit() %}
+                                {% if profit > 0 %}
+                                <span class="text-success">{{ profit | currency }}</span>
+                                {% else %}
+                                <span class="text-danger">{{ profit | currency }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ transaction.date_sold | date }}</td>
+                            <td>
+                                <a href="{{ url_for('sales.view_transaction', transaction_id=transaction.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>No transactions found. Record sales for your listings to track revenue and profit.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

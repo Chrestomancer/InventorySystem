@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Reports</h1>
+</div>
+
+<div class="row">
+    <!-- Profit & Loss Report -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Profit & Loss Report
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>View your profit and loss over a specific time period. Analyze revenue, costs, and profit margins.</p>
+                <div class="d-grid">
+                    <a href="{{ url_for('reports.profit_loss') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-file-alt me-2"></i>View Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Inventory Aging Report -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-hourglass-half me-2"></i>Inventory Aging Report
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Track how long items have been in your inventory. Identify slow-moving items and optimize your stock.</p>
+                <div class="d-grid">
+                    <a href="{{ url_for('reports.inventory_aging') }}" class="btn btn-outline-success">
+                        <i class="fas fa-file-alt me-2"></i>View Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sales by Platform Report -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-tags me-2"></i>Sales by Platform Report
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Compare sales performance across different platforms. Identify which platforms are most profitable for your business.</p>
+                <div class="d-grid">
+                    <a href="{{ url_for('reports.sales_by_platform') }}" class="btn btn-outline-info">
+                        <i class="fas fa-file-alt me-2"></i>View Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Monthly Sales Report -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>Monthly Sales Report
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Track your monthly sales and profit trends. Analyze seasonal patterns and year-over-year growth.</p>
+                <div class="d-grid">
+                    <a href="{{ url_for('reports.monthly_sales') }}" class="btn btn-outline-warning">
+                        <i class="fas fa-file-alt me-2"></i>View Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales Overview Chart -->
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-chart-bar me-2"></i>Sales Overview
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-3 mb-md-0">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0">${{ total_sales|default('0.00') }}</h3>
+                        <p class="text-muted mb-0">Total Sales</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3 mb-md-0">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0">${{ total_profit|default('0.00') }}</h3>
+                        <p class="text-muted mb-0">Total Profit</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0">{{ profit_margin|default('0.00') }}%</h3>
+                        <p class="text-muted mb-0">Profit Margin</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <canvas id="salesOverviewChart" height="300"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Export Options -->
+<div class="card">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-file-export me-2"></i>Export Options
+        </h5>
+    </div>
+    <div class="card-body">
+        <p>Export your data for use in other applications or for record-keeping.</p>
+        <div class="row">
+            <div class="col-md-3 mb-3 mb-md-0">
+                <div class="d-grid">
+                    <button class="btn btn-outline-secondary" disabled>
+                        <i class="fas fa-file-csv me-2"></i>Export as CSV
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3 mb-md-0">
+                <div class="d-grid">
+                    <button class="btn btn-outline-secondary" disabled>
+                        <i class="fas fa-file-excel me-2"></i>Export as Excel
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3 mb-md-0">
+                <div class="d-grid">
+                    <button class="btn btn-outline-secondary" disabled>
+                        <i class="fas fa-file-pdf me-2"></i>Export as PDF
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-grid">
+                    <button class="btn btn-outline-secondary" disabled>
+                        <i class="fas fa-print me-2"></i>Print Report
+                    </button>
+                </div>
+            </div>
+        </div>
+        <p class="text-muted mt-2 mb-0 small">Export functionality will be available in a future update.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sample data for the chart (replace with actual data from backend)
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const salesData = {{ monthly_sales|default([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])|tojson }};
+        const profitData = {{ monthly_profit|default([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])|tojson }};
+        
+        // Create the chart
+        const ctx = document.getElementById('salesOverviewChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'Sales',
+                        data: salesData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Profit',
+                        data: profitData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

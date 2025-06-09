@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.name }} - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Item Details</h1>
+    <div>
+        <a href="{{ url_for('inventory.index') }}" class="btn btn-secondary me-2">
+            <i class="fas fa-arrow-left me-2"></i>Back to Inventory
+        </a>
+        <a href="{{ url_for('inventory.edit_item', item_id=item.id) }}" class="btn btn-primary">
+            <i class="fas fa-edit me-2"></i>Edit Item
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Item Details -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-box me-2"></i>Item Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Name:</div>
+                    <div class="col-md-9">{{ item.name }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">SKU:</div>
+                    <div class="col-md-9">{{ item.sku }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Condition:</div>
+                    <div class="col-md-9">
+                        {% if item.condition == 'new' %}
+                            <span class="badge bg-success">New</span>
+                        {% elif item.condition == 'used' %}
+                            <span class="badge bg-secondary">Used</span>
+                        {% elif item.condition == 'refurbished' %}
+                            <span class="badge bg-info">Refurbished</span>
+                        {% elif item.condition == 'open_box' %}
+                            <span class="badge bg-warning">Open Box</span>
+                        {% elif item.condition == 'damaged' %}
+                            <span class="badge bg-danger">Damaged</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ item.condition }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Cost Price:</div>
+                    <div class="col-md-9">${{ "%.2f"|format(item.cost_price) }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Date Added:</div>
+                    <div class="col-md-9">{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Time in Stock:</div>
+                    <div class="col-md-9">{{ item.time_in_stock() }} days</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Description:</div>
+                    <div class="col-md-9">
+                        {% if item.description %}
+                            {{ item.description|nl2br }}
+                        {% else %}
+                            <em class="text-muted">No description provided</em>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Inventory Summary -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cubes me-2"></i>Inventory Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <h2 class="mb-0">{{ item.current_quantity() }}</h2>
+                    <p class="text-muted">Total Quantity</p>
+                </div>
+                
+                <div class="d-grid gap-2 mb-3">
+                    <a href="{{ url_for('inventory.add_inventory_record', item_id=item.id) }}" class="btn btn-outline-success">
+                        <i class="fas fa-plus me-2"></i>Add Inventory
+                    </a>
+                </div>
+                
+                <hr>
+                
+                <div class="d-flex justify-content-between mb-3">
+                    <div>
+                        <h5 class="mb-0">${{ "%.2f"|format(item.cost_price * item.current_quantity()) }}</h5>
+                        <p class="text-muted mb-0">Total Value</p>
+                    </div>
+                    <div class="text-end">
+                        <h5 class="mb-0">{{ inventory_records|length }}</h5>
+                        <p class="text-muted mb-0">Locations</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('sales.add_listing', item_id=item.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-tag me-2"></i>Create Listing
+                    </a>
+                    <button type="button" class="btn btn-outline-danger delete-confirm" data-bs-toggle="modal" data-bs-target="#deleteItemModal">
+                        <i class="fas fa-trash me-2"></i>Delete Item
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Records -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-cubes me-2"></i>Inventory Records
+        </h5>
+        <a href="{{ url_for('inventory.add_inventory_record', item_id=item.id) }}" class="btn btn-light btn-sm">
+            <i class="fas fa-plus me-1"></i>Add Record
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Location</th>
+                        <th>Quantity</th>
+                        <th>Date Added</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if inventory_records %}
+                        {% for record in inventory_records %}
+                        <tr>
+                            <td>{{ record.location or 'N/A' }}</td>
+                            <td>{{ record.quantity }}</td>
+                            <td>{{ record.date_added.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('inventory.edit_inventory_record', record_id=record.id) }}" class="btn btn-primary" data-bs-toggle="tooltip" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-danger delete-confirm" data-bs-toggle="modal" data-bs-target="#deleteRecordModal{{ record.id }}" data-bs-toggle="tooltip" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Delete Record Modal -->
+                                <div class="modal fade" id="deleteRecordModal{{ record.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Confirm Delete</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to delete this inventory record? This action cannot be undone.
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('inventory.delete_inventory_record', record_id=record.id) }}" method="POST">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-3">
+                                <p class="mb-0">No inventory records found.</p>
+                                <a href="{{ url_for('inventory.add_inventory_record', item_id=item.id) }}" class="btn btn-primary btn-sm mt-2">
+                                    <i class="fas fa-plus me-1"></i>Add Inventory Record
+                                </a>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Listings -->
+<div class="card mb-4">
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-tags me-2"></i>Listings
+        </h5>
+        <a href="{{ url_for('sales.add_listing', item_id=item.id) }}" class="btn btn-light btn-sm">
+            <i class="fas fa-plus me-1"></i>Add Listing
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Platform</th>
+                        <th>Listing Price</th>
+                        <th>Status</th>
+                        <th>Date Listed</th>
+                        <th>Time Listed</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if listings %}
+                        {% for listing in listings %}
+                        <tr>
+                            <td>{{ listing.platform.name }}</td>
+                            <td>${{ "%.2f"|format(listing.listing_price) }}</td>
+                            <td>
+                                {% if listing.status == 'active' %}
+                                    <span class="badge bg-success">Active</span>
+                                {% elif listing.status == 'sold' %}
+                                    <span class="badge bg-primary">Sold</span>
+                                {% elif listing.status == 'expired' %}
+                                    <span class="badge bg-warning">Expired</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ listing.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ listing.date_listed.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ listing.time_listed() }} days</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('sales.view_listing', listing_id=listing.id) }}" class="btn btn-info" data-bs-toggle="tooltip" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('sales.edit_listing', listing_id=listing.id) }}" class="btn btn-primary" data-bs-toggle="tooltip" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% if listing.status == 'active' %}
+                                    <a href="{{ url_for('sales.add_transaction', listing_id=listing.id) }}" class="btn btn-success" data-bs-toggle="tooltip" title="Mark as Sold">
+                                        <i class="fas fa-dollar-sign"></i>
+                                    </a>
+                                    {% endif %}
+                                    <button type="button" class="btn btn-danger delete-confirm" data-bs-toggle="modal" data-bs-target="#deleteListingModal{{ listing.id }}" data-bs-toggle="tooltip" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Delete Listing Modal -->
+                                <div class="modal fade" id="deleteListingModal{{ listing.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Confirm Delete</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to delete this listing? This action cannot be undone.
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('sales.delete_listing', listing_id=listing.id) }}" method="POST">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-3">
+                                <p class="mb-0">No listings found for this item.</p>
+                                <a href="{{ url_for('sales.add_listing', item_id=item.id) }}" class="btn btn-primary btn-sm mt-2">
+                                    <i class="fas fa-plus me-1"></i>Create Listing
+                                </a>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Item Modal -->
+<div class="modal fade" id="deleteItemModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ item.name }}</strong>?</p>
+                <p class="text-danger">This will also delete all inventory records for this item. This action cannot be undone.</p>
+                {% if listings %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>This item has active listings. You must delete all listings before deleting the item.
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('inventory.delete_item', item_id=item.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger" {% if listings %}disabled{% endif %}>Delete Item</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

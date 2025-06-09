@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Sales Platform - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Edit Sales Platform</h1>
+    <a href="{{ url_for('inventory.list_platforms') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Platforms
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Edit Platform: {{ platform.name }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('inventory.edit_platform', platform_id=platform.id) }}" class="needs-validation" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Platform Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ platform.name }}" required>
+                        <div class="invalid-feedback">
+                            Please enter a platform name.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="url" class="form-label">Platform URL</label>
+                        <input type="url" class="form-control" id="url" name="url" value="{{ platform.url or '' }}" placeholder="https://www.example.com">
+                        <small class="text-muted">Optional: The website URL for the platform</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="fee_percentage" class="form-label">Fee Percentage</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="fee_percentage" name="fee_percentage" step="0.01" min="0" max="100" value="{{ platform.fee_percentage }}" required>
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <div class="invalid-feedback">
+                            Please enter a valid fee percentage (0-100).
+                        </div>
+                        <small class="text-muted">The standard fee percentage charged by the platform</small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('inventory.list_platforms') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Platform Usage Card -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Platform Usage
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3 mb-md-0">
+                        <div class="h2 mb-0">{{ platform.listings.count() }}</div>
+                        <p class="text-muted">Active Listings</p>
+                    </div>
+                    
+                    <div class="col-md-4 text-center mb-3 mb-md-0">
+                        {% set sold_count = platform.listings.filter_by(status='sold').count() %}
+                        <div class="h2 mb-0">{{ sold_count }}</div>
+                        <p class="text-muted">Sold Items</p>
+                    </div>
+                    
+                    <div class="col-md-4 text-center">
+                        {% if platform.listings.count() > 0 %}
+                            {% set success_rate = (sold_count / platform.listings.count() * 100)|round %}
+                        {% else %}
+                            {% set success_rate = 0 %}
+                        {% endif %}
+                        <div class="h2 mb-0">{{ success_rate }}%</div>
+                        <p class="text-muted">Success Rate</p>
+                    </div>
+                </div>
+                
+                {% if platform.listings.count() > 0 %}
+                    <hr>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>This platform has {{ platform.listings.count() }} active listings. Changes to the fee percentage will affect future calculations but will not update existing listings or transactions.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Delete Platform Card -->
+        <div class="card mt-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-trash me-2"></i>Delete Platform
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Permanently delete this sales platform from the system.</p>
+                {% if platform.listings.count() > 0 %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>This platform has {{ platform.listings.count() }} active listings. You must delete all listings before deleting the platform.
+                    </div>
+                    <button type="button" class="btn btn-danger" disabled>
+                        <i class="fas fa-trash me-2"></i>Delete Platform
+                    </button>
+                {% else %}
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deletePlatformModal">
+                        <i class="fas fa-trash me-2"></i>Delete Platform
+                    </button>
+                {% endif %}
+                
+                <!-- Delete Platform Modal -->
+                <div class="modal fade" id="deletePlatformModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Confirm Delete</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to delete the platform <strong>{{ platform.name }}</strong>?</p>
+                                <p class="text-danger">This action cannot be undone.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <form action="{{ url_for('inventory.delete_platform', platform_id=platform.id) }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-danger">Delete Platform</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

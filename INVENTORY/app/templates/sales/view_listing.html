@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}View Listing - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('sales.index') }}">Listings</a></li>
+            <li class="breadcrumb-item active">View Listing</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Listing Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Item:</div>
+                        <div class="col-md-8">
+                            <a href="{{ url_for('inventory.view_item', item_id=listing.item.id) }}">
+                                {{ listing.item.name }}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">SKU:</div>
+                        <div class="col-md-8">{{ listing.item.sku }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Platform:</div>
+                        <div class="col-md-8">{{ listing.platform.name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Listing URL:</div>
+                        <div class="col-md-8">
+                            {% if listing.listing_url %}
+                            <a href="{{ listing.listing_url }}" target="_blank">
+                                {{ listing.listing_url }} <i class="fas fa-external-link-alt ms-1"></i>
+                            </a>
+                            {% else %}
+                            <span class="text-muted">Not provided</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Listing Price:</div>
+                        <div class="col-md-8">{{ listing.listing_price | currency }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Status:</div>
+                        <div class="col-md-8">
+                            {% if listing.status == 'active' %}
+                            <span class="badge bg-success">Active</span>
+                            {% elif listing.status == 'sold' %}
+                            <span class="badge bg-primary">Sold</span>
+                            {% elif listing.status == 'expired' %}
+                            <span class="badge bg-warning">Expired</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ listing.status }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Date Listed:</div>
+                        <div class="col-md-8">{{ listing.date_listed | datetime }}</div>
+                    </div>
+                    {% if listing.date_sold %}
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Date Sold:</div>
+                        <div class="col-md-8">{{ listing.date_sold | datetime }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Time Listed:</div>
+                        <div class="col-md-8">{{ listing.time_listed() }} days</div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a href="{{ url_for('sales.edit_listing', listing_id=listing.id) }}" class="btn btn-primary">
+                                <i class="fas fa-edit me-2"></i>Edit Listing
+                            </a>
+                        </div>
+                        <div>
+                            {% if listing.status == 'active' %}
+                            <a href="{{ url_for('sales.add_transaction', listing_id=listing.id) }}" class="btn btn-success">
+                                <i class="fas fa-dollar-sign me-2"></i>Record Sale
+                            </a>
+                            {% endif %}
+                            <form action="{{ url_for('sales.delete_listing', listing_id=listing.id) }}" method="POST" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this listing?')">
+                                    <i class="fas fa-trash-alt me-2"></i>Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Item Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-5 fw-bold">Condition:</div>
+                        <div class="col-md-7">{{ listing.item.condition }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-5 fw-bold">Cost Price:</div>
+                        <div class="col-md-7">{{ listing.item.cost_price | currency }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-5 fw-bold">Current Quantity:</div>
+                        <div class="col-md-7">{{ listing.item.current_quantity() }}</div>
+                    </div>
+                </div>
+            </div>
+
+            {% if transactions %}
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Transactions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for transaction in transactions %}
+                        <a href="{{ url_for('sales.view_transaction', transaction_id=transaction.id) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ transaction.final_sale_price | currency }}</h6>
+                                <small>{{ transaction.date_sold | date }}</small>
+                            </div>
+                            <p class="mb-1">
+                                {% set profit = transaction.calculate_profit() %}
+                                Profit: 
+                                {% if profit > 0 %}
+                                <span class="text-success">{{ profit | currency }}</span>
+                                {% else %}
+                                <span class="text-danger">{{ profit | currency }}</span>
+                                {% endif %}
+                            </p>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

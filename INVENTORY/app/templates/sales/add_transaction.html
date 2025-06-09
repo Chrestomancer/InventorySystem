@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Record Sale - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('sales.index') }}">Listings</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('sales.view_listing', listing_id=listing.id) }}">View Listing</a></li>
+            <li class="breadcrumb-item active">Record Sale</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Record Sale for {{ listing.item.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Recording a sale will mark this listing as sold and create a transaction record.
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('sales.add_transaction', listing_id=listing.id) }}" class="needs-validation" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Listing Information</h6>
+                                        <p class="mb-1"><strong>Item:</strong> {{ listing.item.name }}</p>
+                                        <p class="mb-1"><strong>Platform:</strong> {{ listing.platform.name }}</p>
+                                        <p class="mb-1"><strong>Listed Price:</strong> {{ listing.listing_price | currency }}</p>
+                                        <p class="mb-0"><strong>Cost Price:</strong> {{ listing.item.cost_price | currency }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="final_sale_price" class="form-label">Final Sale Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="final_sale_price" name="final_sale_price" step="0.01" min="0" value="{{ listing.listing_price }}" required>
+                                <div class="invalid-feedback">
+                                    Please enter the final sale price.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tax_amount" class="form-label">Tax Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="tax_amount" name="tax_amount" step="0.01" min="0" value="0.00">
+                            </div>
+                            <div class="form-text">Any sales tax collected or paid</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="platform_fee" class="form-label">Platform Fee</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="platform_fee" name="platform_fee" step="0.01" min="0" value="{{ (listing.listing_price * listing.platform.fee_percentage / 100) | round(2) }}">
+                            </div>
+                            <div class="form-text">Fees charged by the sales platform</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="shipping_cost" class="form-label">Shipping Cost</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="shipping_cost" name="shipping_cost" step="0.01" min="0" value="0.00">
+                            </div>
+                            <div class="form-text">Cost of shipping the item</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="other_fees" class="form-label">Other Fees</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="other_fees" name="other_fees" step="0.01" min="0" value="0.00">
+                            </div>
+                            <div class="form-text">Any other fees or costs associated with this sale</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('sales.view_listing', listing_id=listing.id) }}" class="btn btn-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check-circle me-2"></i>Record Sale
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

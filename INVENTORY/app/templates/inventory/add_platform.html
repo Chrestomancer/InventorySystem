@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Add Sales Platform - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Add Sales Platform</h1>
+    <a href="{{ url_for('inventory.list_platforms') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Platforms
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">New Sales Platform</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('inventory.add_platform') }}" class="needs-validation" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Platform Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                        <div class="invalid-feedback">
+                            Please enter a platform name.
+                        </div>
+                        <small class="text-muted">Example: eBay, Craigslist, Amazon, Etsy, etc.</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="url" class="form-label">Platform URL</label>
+                        <input type="url" class="form-control" id="url" name="url" placeholder="https://www.example.com">
+                        <small class="text-muted">Optional: The website URL for the platform</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="fee_percentage" class="form-label">Fee Percentage</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="fee_percentage" name="fee_percentage" step="0.01" min="0" max="100" value="0" required>
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <div class="invalid-feedback">
+                            Please enter a valid fee percentage (0-100).
+                        </div>
+                        <small class="text-muted">The standard fee percentage charged by the platform</small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('inventory.list_platforms') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add Platform
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Platform Information Card -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>About Sales Platforms
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Sales platforms are the marketplaces where you list and sell your inventory items. Adding platforms to the system allows you to:</p>
+                <ul>
+                    <li>Track which platform each listing is on</li>
+                    <li>Calculate platform-specific fees automatically</li>
+                    <li>Compare performance across different sales channels</li>
+                    <li>Generate platform-specific reports</li>
+                </ul>
+                
+                <h5 class="mt-4">Common Platform Fee Percentages</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Platform</th>
+                                <th>Typical Fee Percentage</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>eBay</td>
+                                <td>10-12%</td>
+                                <td>Varies by category</td>
+                            </tr>
+                            <tr>
+                                <td>Amazon</td>
+                                <td>15%</td>
+                                <td>Varies by category, plus subscription fees</td>
+                            </tr>
+                            <tr>
+                                <td>Etsy</td>
+                                <td>6.5%</td>
+                                <td>Plus listing fees</td>
+                            </tr>
+                            <tr>
+                                <td>Craigslist</td>
+                                <td>0%</td>
+                                <td>Free for most categories</td>
+                            </tr>
+                            <tr>
+                                <td>Facebook Marketplace</td>
+                                <td>0%</td>
+                                <td>Free for personal sales</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="small text-muted mb-0">Note: These are approximate values and may change. Always check the platform's current fee structure.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

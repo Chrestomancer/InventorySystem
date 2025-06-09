@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Profit & Loss Report - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Profit & Loss Report</h1>
+    <a href="{{ url_for('reports.index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Reports
+    </a>
+</div>
+
+<!-- Date Range Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('reports.profit_loss') }}" class="row g-3">
+            <div class="col-md-4">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="col-md-4">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3 mb-md-0">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h2 class="text-primary mb-0">${{ "%.2f"|format(total_revenue) }}</h2>
+                <p class="text-muted mb-0">Total Revenue</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3 mb-md-0">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h2 class="text-danger mb-0">${{ "%.2f"|format(total_expenses) }}</h2>
+                <p class="text-muted mb-0">Total Expenses</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h2 class="{% if net_profit >= 0 %}text-success{% else %}text-danger{% endif %} mb-0">
+                    ${{ "%.2f"|format(net_profit) }}
+                </h2>
+                <p class="text-muted mb-0">Net Profit</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profit Breakdown -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Expense Breakdown
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="expenseChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-percentage me-2"></i>Profit Metrics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Profit Margin</h6>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ profit_margin }}%;" aria-valuenow="{{ profit_margin }}" aria-valuemin="0" aria-valuemax="100">{{ "%.2f"|format(profit_margin) }}%</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <h6>Return on Investment (ROI)</h6>
+                    {% set roi = (net_profit / total_cost * 100) if total_cost > 0 else 0 %}
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar {% if roi >= 0 %}bg-success{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ roi|max(0)|min(100) }}%;" aria-valuenow="{{ roi }}" aria-valuemin="0" aria-valuemax="100">{{ "%.2f"|format(roi) }}%</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <h6>Cost to Revenue Ratio</h6>
+                    {% set cost_ratio = (total_cost / total_revenue * 100) if total_revenue > 0 else 0 %}
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ cost_ratio|min(100) }}%;" aria-valuenow="{{ cost_ratio }}" aria-valuemin="0" aria-valuemax="100">{{ "%.2f"|format(cost_ratio) }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-list me-2"></i>Transaction Details
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Item</th>
+                        <th>Platform</th>
+                        <th>Sale Price</th>
+                        <th>Cost</th>
+                        <th>Fees</th>
+                        <th>Profit</th>
+                        <th>Margin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if transactions %}
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.date_sold.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <a href="{{ url_for('inventory.view_item', item_id=transaction.listing.item.id) }}">
+                                    {{ transaction.listing.item.name }}
+                                </a>
+                            </td>
+                            <td>{{ transaction.listing.platform.name }}</td>
+                            <td>${{ "%.2f"|format(transaction.final_sale_price) }}</td>
+                            <td>${{ "%.2f"|format(transaction.listing.item.cost_price) }}</td>
+                            <td>${{ "%.2f"|format(transaction.tax_amount + transaction.platform_fee + transaction.shipping_cost + transaction.other_fees) }}</td>
+                            {% set profit = transaction.calculate_profit() %}
+                            <td class="{% if profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                ${{ "%.2f"|format(profit) }}
+                            </td>
+                            {% set margin = transaction.calculate_profit_margin() %}
+                            <td class="{% if margin >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ "%.2f"|format(margin) }}%
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <p class="mb-0">No transactions found for the selected date range.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Expense breakdown chart
+        const ctx = document.getElementById('expenseChart').getContext('2d');
+        
+        const costPrice = {{ total_cost }};
+        const taxAmount = {{ total_tax }};
+        const platformFees = {{ total_platform_fees }};
+        const shippingCost = {{ total_shipping }};
+        const otherFees = {{ total_other_fees }};
+        
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Cost of Goods', 'Taxes', 'Platform Fees', 'Shipping', 'Other Fees'],
+                datasets: [{
+                    data: [costPrice, taxAmount, platformFees, shippingCost, otherFees],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: $${value.toFixed(2)} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

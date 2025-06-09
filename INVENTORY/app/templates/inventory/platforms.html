@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Sales Platforms - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Sales Platforms</h1>
+    <a href="{{ url_for('inventory.add_platform') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Add New Platform
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-tags me-2"></i>Configured Sales Platforms
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>URL</th>
+                        <th>Fee Percentage</th>
+                        <th>Active Listings</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if platforms %}
+                        {% for platform in platforms %}
+                        <tr>
+                            <td>
+                                <strong>{{ platform.name }}</strong>
+                            </td>
+                            <td>
+                                {% if platform.url %}
+                                    <a href="{{ platform.url }}" target="_blank">{{ platform.url }}</a>
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ platform.fee_percentage }}%</td>
+                            <td>{{ platform.listings.count() }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('inventory.edit_platform', platform_id=platform.id) }}" class="btn btn-primary" data-bs-toggle="tooltip" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-danger delete-confirm" data-bs-toggle="modal" data-bs-target="#deletePlatformModal{{ platform.id }}" data-bs-toggle="tooltip" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Delete Platform Modal -->
+                                <div class="modal fade" id="deletePlatformModal{{ platform.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Confirm Delete</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to delete the platform <strong>{{ platform.name }}</strong>?</p>
+                                                {% if platform.listings.count() > 0 %}
+                                                <div class="alert alert-warning">
+                                                    <i class="fas fa-exclamation-triangle me-2"></i>This platform has {{ platform.listings.count() }} active listings. You must delete all listings before deleting the platform.
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('inventory.delete_platform', platform_id=platform.id) }}" method="POST">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-danger" {% if platform.listings.count() > 0 %}disabled{% endif %}>Delete Platform</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <p class="mb-0">No sales platforms configured.</p>
+                                <a href="{{ url_for('inventory.add_platform') }}" class="btn btn-primary mt-2">
+                                    <i class="fas fa-plus me-2"></i>Add Your First Platform
+                                </a>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Platform Information Card -->
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-info-circle me-2"></i>About Sales Platforms
+        </h5>
+    </div>
+    <div class="card-body">
+        <p>Sales platforms are the marketplaces where you list and sell your inventory items. Configuring platforms allows you to:</p>
+        <ul>
+            <li>Track which platform each listing is on</li>
+            <li>Calculate platform-specific fees automatically</li>
+            <li>Compare performance across different sales channels</li>
+            <li>Generate platform-specific reports</li>
+        </ul>
+        <p>For each platform, you can specify:</p>
+        <ul>
+            <li><strong>Name</strong>: The name of the platform (e.g., eBay, Craigslist, Amazon)</li>
+            <li><strong>URL</strong>: The website URL for the platform (optional)</li>
+            <li><strong>Fee Percentage</strong>: The standard fee percentage charged by the platform</li>
+        </ul>
+        <p class="mb-0">When you create a listing, you'll select which platform it's listed on, and when you record a sale, the system will automatically calculate the platform fee based on the percentage you've configured.</p>
+    </div>
+</div>
+{% endblock %}

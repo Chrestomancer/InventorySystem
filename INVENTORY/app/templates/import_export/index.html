@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Import/Export - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Import & Export Data</h1>
+    
+    <div class="row">
+        <!-- Export Section -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-export me-2"></i>Export Data</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('import_export.export') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">What data would you like to export?</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="data_type" id="exportAll" value="all" checked>
+                                <label class="form-check-label" for="exportAll">
+                                    All Data
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="data_type" id="exportInventory" value="inventory">
+                                <label class="form-check-label" for="exportInventory">
+                                    Inventory Items & Records
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="data_type" id="exportPlatforms" value="platforms">
+                                <label class="form-check-label" for="exportPlatforms">
+                                    Sales Platforms
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="data_type" id="exportListings" value="listings">
+                                <label class="form-check-label" for="exportListings">
+                                    Listings
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="data_type" id="exportTransactions" value="transactions">
+                                <label class="form-check-label" for="exportTransactions">
+                                    Sales Transactions
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Export Format</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="file_format" id="formatExcel" value="excel" checked>
+                                <label class="form-check-label" for="formatExcel">
+                                    Excel (.xlsx)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="file_format" id="formatCSV" value="csv">
+                                <label class="form-check-label" for="formatCSV">
+                                    CSV (.csv)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i>Export
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Import Section -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-import me-2"></i>Import Data</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('import_export.import_data') }}" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">What data would you like to import?</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="data_type" id="importInventory" value="inventory" checked>
+                                <label class="form-check-label" for="importInventory">
+                                    Inventory Items & Records
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="data_type" id="importPlatforms" value="platforms">
+                                <label class="form-check-label" for="importPlatforms">
+                                    Sales Platforms
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="importFile" class="form-label">Upload File (Excel or CSV)</label>
+                            <input class="form-control" type="file" id="importFile" name="file" accept=".xlsx,.xls,.csv">
+                            <div class="form-text">
+                                Upload an Excel (.xlsx, .xls) or CSV (.csv) file with your data.
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-upload me-2"></i>Import
+                                </button>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="templateDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-file-download me-2"></i>Download Template
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="templateDropdown">
+                                    <li><a class="dropdown-item" href="{{ url_for('import_export.get_template', data_type='inventory', format='excel') }}">Inventory Template (Excel)</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('import_export.get_template', data_type='inventory', format='csv') }}">Inventory Template (CSV)</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('import_export.get_template', data_type='platforms', format='excel') }}">Platforms Template (Excel)</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('import_export.get_template', data_type='platforms', format='csv') }}">Platforms Template (CSV)</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Help Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>Help & Information</h5>
+        </div>
+        <div class="card-body">
+            <h5>Export</h5>
+            <p>Export your data to Excel or CSV format for backup or analysis purposes. You can export all data or specific sections.</p>
+            
+            <h5>Import</h5>
+            <p>Import data from Excel or CSV files. The system will:</p>
+            <ul>
+                <li>Update existing items if they match by SKU</li>
+                <li>Create new items if they don't exist</li>
+                <li>Skip rows with errors (and report them)</li>
+            </ul>
+            
+            <h5>Templates</h5>
+            <p>Download sample templates to see the required format for importing data. The templates include:</p>
+            <ul>
+                <li><strong>Inventory Template</strong>: For importing items and inventory records</li>
+                <li><strong>Platforms Template</strong>: For importing sales platforms</li>
+            </ul>
+            
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Important:</strong> When importing inventory items, the "Name" field is required for new items. For existing items (matched by SKU), any fields you include will update the existing data.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,430 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Sales Report - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Monthly Sales Report</h1>
+    <a href="{{ url_for('reports.index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Reports
+    </a>
+</div>
+
+<!-- Year Selection -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('reports.monthly_sales') }}" class="row g-3">
+            <div class="col-md-6">
+                <label for="year" class="form-label">Select Year</label>
+                <select class="form-select" id="year" name="year">
+                    {% for y in range(year|int - 3, year|int + 1) %}
+                        <option value="{{ y }}" {% if y == year|int %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Apply</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Year Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3 mb-md-0">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h2 class="text-primary mb-0">${{ "%.2f"|format(year_total_sales) }}</h2>
+                <p class="text-muted mb-0">Total Sales for {{ year }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3 mb-md-0">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h2 class="{% if year_total_profit >= 0 %}text-success{% else %}text-danger{% endif %} mb-0">
+                    ${{ "%.2f"|format(year_total_profit) }}
+                </h2>
+                <p class="text-muted mb-0">Total Profit for {{ year }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-light h-100">
+            <div class="card-body text-center">
+                <h2 class="text-info mb-0">{{ year_transaction_count }}</h2>
+                <p class="text-muted mb-0">Total Transactions</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Sales Chart -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-chart-line me-2"></i>Monthly Sales & Profit ({{ year }})
+        </h5>
+    </div>
+    <div class="card-body">
+        <canvas id="monthlySalesChart" height="300"></canvas>
+    </div>
+</div>
+
+<!-- Monthly Data Table -->
+<div class="card">
+    <div class="card-header bg-dark text-white">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-table me-2"></i>Monthly Breakdown
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Month</th>
+                        <th>Sales</th>
+                        <th>Profit</th>
+                        <th>Transactions</th>
+                        <th>Avg. Sale</th>
+                        <th>Profit Margin</th>
+                        <th>Performance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in monthly_data %}
+                    <tr>
+                        <td><strong>{{ data.month_name }}</strong></td>
+                        <td>${{ "%.2f"|format(data.total_sales) }}</td>
+                        <td class="{% if data.total_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            ${{ "%.2f"|format(data.total_profit) }}
+                        </td>
+                        <td>{{ data.transaction_count }}</td>
+                        <td>
+                            {% if data.transaction_count > 0 %}
+                                ${{ "%.2f"|format(data.total_sales / data.transaction_count) }}
+                            {% else %}
+                                $0.00
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if data.total_sales > 0 %}
+                                {% set profit_margin = (data.total_profit / data.total_sales * 100) %}
+                                {{ "%.2f"|format(profit_margin) }}%
+                            {% else %}
+                                0.00%
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if data.total_sales > 0 %}
+                                {% set profit_margin = (data.total_profit / data.total_sales * 100) %}
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar 
+                                        {% if profit_margin >= 20 %}bg-success
+                                        {% elif profit_margin >= 10 %}bg-info
+                                        {% elif profit_margin >= 0 %}bg-warning
+                                        {% else %}bg-danger{% endif %}" 
+                                        role="progressbar" 
+                                        style="width: {{ profit_margin|max(0)|min(100) }}%;" 
+                                        aria-valuenow="{{ profit_margin }}" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="100">
+                                        {{ "%.0f"|format(profit_margin) }}%
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-secondary" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    
+                    <!-- Year Total Row -->
+                    <tr class="table-light fw-bold">
+                        <td>Total</td>
+                        <td>${{ "%.2f"|format(year_total_sales) }}</td>
+                        <td class="{% if year_total_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            ${{ "%.2f"|format(year_total_profit) }}
+                        </td>
+                        <td>{{ year_transaction_count }}</td>
+                        <td>
+                            {% if year_transaction_count > 0 %}
+                                ${{ "%.2f"|format(year_total_sales / year_transaction_count) }}
+                            {% else %}
+                                $0.00
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if year_total_sales > 0 %}
+                                {{ "%.2f"|format(year_total_profit / year_total_sales * 100) }}%
+                            {% else %}
+                                0.00%
+                            {% endif %}
+                        </td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Quarterly Analysis -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Quarterly Sales Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="quarterlyChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Sales Insights
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-info-circle me-2"></i>Performance Analysis</h5>
+                    <ul class="mb-0">
+                        {% set best_month = {'name': '', 'sales': 0} %}
+                        {% set worst_month = {'name': '', 'sales': 999999999} %}
+                        {% set best_profit_month = {'name': '', 'profit': 0} %}
+                        
+                        {% for data in monthly_data %}
+                            {% if data.total_sales > best_month.sales %}
+                                {% set _ = best_month.update({'name': data.month_name, 'sales': data.total_sales}) %}
+                            {% endif %}
+                            
+                            {% if data.total_sales < worst_month.sales and data.total_sales > 0 %}
+                                {% set _ = worst_month.update({'name': data.month_name, 'sales': data.total_sales}) %}
+                            {% endif %}
+                            
+                            {% if data.total_profit > best_profit_month.profit %}
+                                {% set _ = best_profit_month.update({'name': data.month_name, 'profit': data.total_profit}) %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if best_month.name %}
+                            <li><strong>{{ best_month.name }}</strong> was your best month for sales at ${{ "%.2f"|format(best_month.sales) }}.</li>
+                        {% endif %}
+                        
+                        {% if worst_month.name and worst_month.name != best_month.name and worst_month.sales < 999999999 %}
+                            <li><strong>{{ worst_month.name }}</strong> was your lowest month for sales at ${{ "%.2f"|format(worst_month.sales) }}.</li>
+                        {% endif %}
+                        
+                        {% if best_profit_month.name and best_profit_month.name != best_month.name %}
+                            <li><strong>{{ best_profit_month.name }}</strong> was your most profitable month at ${{ "%.2f"|format(best_profit_month.profit) }}.</li>
+                        {% endif %}
+                        
+                        {% if year_total_sales > 0 %}
+                            <li>Your overall profit margin for {{ year }} is {{ "%.2f"|format(year_total_profit / year_total_sales * 100) }}%.</li>
+                        {% endif %}
+                        
+                        {% set q1_sales = monthly_data[0].total_sales + monthly_data[1].total_sales + monthly_data[2].total_sales %}
+                        {% set q2_sales = monthly_data[3].total_sales + monthly_data[4].total_sales + monthly_data[5].total_sales %}
+                        {% set q3_sales = monthly_data[6].total_sales + monthly_data[7].total_sales + monthly_data[8].total_sales %}
+                        {% set q4_sales = monthly_data[9].total_sales + monthly_data[10].total_sales + monthly_data[11].total_sales %}
+                        
+                        {% set best_quarter = {'name': '', 'sales': 0} %}
+                        {% if q1_sales > best_quarter.sales %}{% set _ = best_quarter.update({'name': 'Q1', 'sales': q1_sales}) %}{% endif %}
+                        {% if q2_sales > best_quarter.sales %}{% set _ = best_quarter.update({'name': 'Q2', 'sales': q2_sales}) %}{% endif %}
+                        {% if q3_sales > best_quarter.sales %}{% set _ = best_quarter.update({'name': 'Q3', 'sales': q3_sales}) %}{% endif %}
+                        {% if q4_sales > best_quarter.sales %}{% set _ = best_quarter.update({'name': 'Q4', 'sales': q4_sales}) %}{% endif %}
+                        
+                        {% if best_quarter.name %}
+                            <li><strong>{{ best_quarter.name }}</strong> was your strongest quarter with ${{ "%.2f"|format(best_quarter.sales) }} in sales.</li>
+                        {% endif %}
+                    </ul>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <h5><i class="fas fa-exclamation-triangle me-2"></i>Recommendations</h5>
+                    <ul class="mb-0">
+                        {% set avg_monthly_sales = year_total_sales / 12 if year_total_sales > 0 else 0 %}
+                        {% set low_months = [] %}
+                        
+                        {% for data in monthly_data %}
+                            {% if data.total_sales < (avg_monthly_sales * 0.7) and data.total_sales > 0 %}
+                                {% set _ = low_months.append(data.month_name) %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if low_months|length > 0 %}
+                            <li>Consider implementing special promotions during historically slower months: {{ low_months|join(', ') }}.</li>
+                        {% endif %}
+                        
+                        {% if year_total_profit / year_total_sales * 100 < 15 and year_total_sales > 0 %}
+                            <li>Your overall profit margin is below 15%. Review your pricing strategy and costs to improve profitability.</li>
+                        {% endif %}
+                        
+                        {% if year_transaction_count < 12 %}
+                            <li>You averaged less than one sale per month. Consider expanding your inventory or marketing efforts to increase sales volume.</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Monthly sales chart
+        const months = [
+            {% for data in monthly_data %}
+                "{{ data.month_name }}",
+            {% endfor %}
+        ];
+        
+        const salesData = [
+            {% for data in monthly_data %}
+                {{ data.total_sales }},
+            {% endfor %}
+        ];
+        
+        const profitData = [
+            {% for data in monthly_data %}
+                {{ data.total_profit }},
+            {% endfor %}
+        ];
+        
+        const transactionData = [
+            {% for data in monthly_data %}
+                {{ data.transaction_count }},
+            {% endfor %}
+        ];
+        
+        const ctx = document.getElementById('monthlySalesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'Sales ($)',
+                        data: salesData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Profit ($)',
+                        data: profitData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Transactions',
+                        data: transactionData,
+                        type: 'line',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Amount ($)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value;
+                            }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Transaction Count'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Quarterly sales chart
+        const quarterlyCtx = document.getElementById('quarterlyChart').getContext('2d');
+        
+        // Calculate quarterly totals
+        const q1Sales = {{ monthly_data[0].total_sales + monthly_data[1].total_sales + monthly_data[2].total_sales }};
+        const q2Sales = {{ monthly_data[3].total_sales + monthly_data[4].total_sales + monthly_data[5].total_sales }};
+        const q3Sales = {{ monthly_data[6].total_sales + monthly_data[7].total_sales + monthly_data[8].total_sales }};
+        const q4Sales = {{ monthly_data[9].total_sales + monthly_data[10].total_sales + monthly_data[11].total_sales }};
+        
+        new Chart(quarterlyCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Q1 (Jan-Mar)', 'Q2 (Apr-Jun)', 'Q3 (Jul-Sep)', 'Q4 (Oct-Dec)'],
+                datasets: [{
+                    data: [q1Sales, q2Sales, q3Sales, q4Sales],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(255, 99, 132, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: $${value.toFixed(2)} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

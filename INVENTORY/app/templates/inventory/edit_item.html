@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Item - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Edit Item</h1>
+    <a href="{{ url_for('inventory.view_item', item_id=item.id) }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Item
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Edit Item: {{ item.name }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('inventory.edit_item', item_id=item.id) }}" class="needs-validation" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Item Name</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ item.name }}" required>
+                            <div class="invalid-feedback">
+                                Please enter an item name.
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="sku" class="form-label">SKU</label>
+                            <input type="text" class="form-control" id="sku" name="sku" value="{{ item.sku or '' }}">
+                            <small class="text-muted">Leave blank to auto-generate</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ item.description or '' }}</textarea>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="condition" class="form-label">Condition</label>
+                            <select class="form-select" id="condition" name="condition" required>
+                                <option value="" disabled>Select condition</option>
+                                <option value="new" {% if item.condition == 'new' %}selected{% endif %}>New</option>
+                                <option value="used" {% if item.condition == 'used' %}selected{% endif %}>Used</option>
+                                <option value="refurbished" {% if item.condition == 'refurbished' %}selected{% endif %}>Refurbished</option>
+                                <option value="open_box" {% if item.condition == 'open_box' %}selected{% endif %}>Open Box</option>
+                                <option value="damaged" {% if item.condition == 'damaged' %}selected{% endif %}>Damaged</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select a condition.
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cost_price" class="form-label">Cost Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="cost_price" name="cost_price" step="0.01" min="0" value="{{ item.cost_price }}" required>
+                                <div class="invalid-feedback">
+                                    Please enter a valid cost price.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('inventory.view_item', item_id=item.id) }}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Item Information Card -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Item Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-2">
+                    <div class="col-md-3 fw-bold">Item ID:</div>
+                    <div class="col-md-9">{{ item.id }}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-3 fw-bold">Date Added:</div>
+                    <div class="col-md-9">{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-3 fw-bold">Current Quantity:</div>
+                    <div class="col-md-9">{{ item.current_quantity() }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 fw-bold">Time in Stock:</div>
+                    <div class="col-md-9">{{ item.time_in_stock() }} days</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Delete Item Card -->
+        <div class="card mt-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-trash me-2"></i>Delete Item
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Permanently delete this item from the inventory.</p>
+                {% if item.listings.count() > 0 %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>This item has {{ item.listings.count() }} active listings. You must delete all listings before deleting the item.
+                    </div>
+                    <button type="button" class="btn btn-danger" disabled>
+                        <i class="fas fa-trash me-2"></i>Delete Item
+                    </button>
+                {% else %}
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteItemModal">
+                        <i class="fas fa-trash me-2"></i>Delete Item
+                    </button>
+                {% endif %}
+                
+                <!-- Delete Item Modal -->
+                <div class="modal fade" id="deleteItemModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Confirm Delete</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to delete <strong>{{ item.name }}</strong>?</p>
+                                <p class="text-danger">This will also delete all inventory records for this item. This action cannot be undone.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <form action="{{ url_for('inventory.delete_item', item_id=item.id) }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-danger">Delete Item</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-generate SKU when name changes if SKU is empty
+        const nameInput = document.getElementById('name');
+        const skuInput = document.getElementById('sku');
+        
+        nameInput.addEventListener('blur', function() {
+            if (skuInput.value === '' && nameInput.value !== '') {
+                // Generate SKU from name (first 3 letters) + timestamp
+                const namePrefix = nameInput.value.replace(/[^a-zA-Z0-9]/g, '').substring(0, 3).toUpperCase();
+                const timestamp = Date.now().toString().substring(7);
+                skuInput.value = namePrefix + timestamp;
+            }
+        });
+    });
+</script>
+{% endblock %}

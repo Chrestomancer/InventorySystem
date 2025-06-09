@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Receipt or Invoice{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Upload Receipt or Invoice</h1>
+            <p class="lead">Upload a receipt or invoice to extract information and add it to your inventory system.</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Upload Document</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('documents.upload') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="mb-3">
+                            <label for="document" class="form-label">Select Document</label>
+                            <input type="file" class="form-control" id="document" name="document" accept=".jpg,.jpeg,.png,.pdf,.tiff,.tif,.html,.htm">
+                            <div class="form-text">Supported formats: JPG, PNG, PDF, TIFF, HTML</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Upload and Process</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Tips for Best Results</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Ensure the document is well-lit and clearly visible
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            For photos, take them directly above the receipt
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Make sure text is readable and not blurry
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Include the entire receipt in the image
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            For digital receipts, save as PDF when possible
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">What Happens Next?</h5>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li>Your document will be processed using multiple OCR techniques</li>
+                        <li>You'll be able to review the extracted information</li>
+                        <li>After confirming, the data will be added to your inventory system</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

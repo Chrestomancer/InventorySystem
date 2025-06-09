@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Add Item - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Add New Item</h1>
+    <a href="{{ url_for('inventory.index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Inventory
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('inventory.add_item') }}" class="needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="name" class="form-label">Item Name</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                    <div class="invalid-feedback">
+                        Please enter an item name.
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="sku" class="form-label">SKU</label>
+                    <input type="text" class="form-control" id="sku" name="sku">
+                    <small class="text-muted">Leave blank to auto-generate</small>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="condition" class="form-label">Condition</label>
+                    <select class="form-select" id="condition" name="condition" required>
+                        <option value="" selected disabled>Select condition</option>
+                        <option value="new">New</option>
+                        <option value="used">Used</option>
+                        <option value="refurbished">Refurbished</option>
+                        <option value="open_box">Open Box</option>
+                        <option value="damaged">Damaged</option>
+                    </select>
+                    <div class="invalid-feedback">
+                        Please select a condition.
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="cost_price" class="form-label">Cost Price</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" class="form-control" id="cost_price" name="cost_price" step="0.01" min="0" required>
+                        <div class="invalid-feedback">
+                            Please enter a valid cost price.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-4">
+            
+            <h4>Initial Inventory</h4>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="quantity" class="form-label">Quantity</label>
+                    <input type="number" class="form-control" id="quantity" name="quantity" min="0" value="1" required>
+                    <div class="invalid-feedback">
+                        Please enter a valid quantity.
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="location" class="form-label">Location</label>
+                    <input type="text" class="form-control" id="location" name="location" placeholder="e.g., Warehouse A, Shelf B3">
+                </div>
+            </div>
+            
+            <hr class="my-4">
+            
+            <h4>Custom Fields <small class="text-muted">(Optional)</small></h4>
+            <p class="text-muted mb-3">Add any additional information specific to this item.</p>
+            
+            <div id="custom-fields-container">
+                <!-- Custom fields will be added here dynamically -->
+            </div>
+            
+            <div class="mb-3">
+                <button type="button" id="add-field-button" class="btn btn-outline-secondary">
+                    <i class="fas fa-plus me-2"></i>Add Custom Field
+                </button>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                <button type="reset" class="btn btn-outline-secondary me-md-2">Reset</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Save Item
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-generate SKU when name changes
+        const nameInput = document.getElementById('name');
+        const skuInput = document.getElementById('sku');
+        
+        nameInput.addEventListener('blur', function() {
+            if (skuInput.value === '' && nameInput.value !== '') {
+                // Generate SKU from name (first 3 letters) + timestamp
+                const namePrefix = nameInput.value.replace(/[^a-zA-Z0-9]/g, '').substring(0, 3).toUpperCase();
+                const timestamp = Date.now().toString().substring(7);
+                skuInput.value = namePrefix + timestamp;
+            }
+        });
+    });
+</script>
+{% endblock %}

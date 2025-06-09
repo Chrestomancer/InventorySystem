@@ -1,0 +1,512 @@
+{% extends 'base.html' %}
+
+{% block title %}Review Extracted Data{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Review Extracted Data</h1>
+            <p class="lead">Review and confirm the information extracted from your document.</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Extracted Information</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="dataTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab">
+                                Add to Inventory
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="transaction-tab" data-bs-toggle="tab" data-bs-target="#transaction" type="button" role="tab">
+                                Record as Transaction
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content p-3" id="dataTabsContent">
+                        <!-- Inventory Tab -->
+                        <div class="tab-pane fade show active" id="inventory" role="tabpanel">
+                            <form method="POST" id="inventoryForm">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="action" value="inventory">
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="vendor_name" class="form-label">
+                                                Vendor/Store Name
+                                                {% if confidence_scores.get('vendor') is not none %}
+                                                <span class="badge {% if confidence_scores.get('vendor', 0) > 0.8 %}bg-success{% elif confidence_scores.get('vendor', 0) > 0.5 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                    {{ (confidence_scores.get('vendor', 0) * 100)|round|int }}% confidence
+                                                </span>
+                                                {% endif %}
+                                            </label>
+                                            <input type="text" class="form-control" id="vendor_name" name="vendor_name" 
+                                                   value="{{ extracted_data.get('vendor', '') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="platform_name" class="form-label">Sales Platform</label>
+                                            <select class="form-select" id="platform_name" name="platform_name">
+                                                <option value="">-- Select Platform --</option>
+                                                {% for platform in platforms %}
+                                                <option value="{{ platform.id }}" {% if platform.name == extracted_data.get('platform_name') %}selected{% endif %}>
+                                                    {{ platform.name }}
+                                                </option>
+                                                {% endfor %}
+                                                <option value="new">Add New Platform...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="new_platform_fields" class="row" style="display: none;">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="new_platform_name" class="form-label">New Platform Name</label>
+                                            <input type="text" class="form-control" id="new_platform_name" name="new_platform_name" 
+                                                   value="{{ extracted_data.get('platform_name', '') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="platform_url" class="form-label">Platform URL</label>
+                                            <input type="text" class="form-control" id="platform_url" name="platform_url" 
+                                                   value="{{ extracted_data.get('platform_url', '') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="fee_percentage" class="form-label">Fee Percentage</label>
+                                            <input type="number" step="0.01" class="form-control" id="fee_percentage" name="fee_percentage" 
+                                                   value="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="date" class="form-label">
+                                                Date
+                                                {% if confidence_scores.get('date') is not none %}
+                                                <span class="badge {% if confidence_scores.get('date', 0) > 0.8 %}bg-success{% elif confidence_scores.get('date', 0) > 0.5 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                    {{ (confidence_scores.get('date', 0) * 100)|round|int }}% confidence
+                                                </span>
+                                                {% endif %}
+                                            </label>
+                                            <input type="text" class="form-control" id="date" name="date" 
+                                                   value="{{ extracted_data.get('date', '') }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="invoice_number" class="form-label">
+                                                Invoice/Receipt Number
+                                                {% if confidence_scores.get('invoice_number') is not none %}
+                                                <span class="badge {% if confidence_scores.get('invoice_number', 0) > 0.8 %}bg-success{% elif confidence_scores.get('invoice_number', 0) > 0.5 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                    {{ (confidence_scores.get('invoice_number', 0) * 100)|round|int }}% confidence
+                                                </span>
+                                                {% endif %}
+                                            </label>
+                                            <input type="text" class="form-control" id="invoice_number" name="invoice_number" 
+                                                   value="{{ extracted_data.get('invoice_number', '') }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <h5 class="mt-4 mb-3">
+                                    Items
+                                    {% if confidence_scores.get('items') is not none %}
+                                    <span class="badge {% if confidence_scores.get('items', 0) > 0.8 %}bg-success{% elif confidence_scores.get('items', 0) > 0.5 %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ (confidence_scores.get('items', 0) * 100)|round|int }}% confidence
+                                    </span>
+                                    {% endif %}
+                                </h5>
+                                
+                                <div id="items-container">
+                                    <input type="hidden" name="items_count" value="{{ extracted_data.get('items', [])|length }}">
+                                    
+                                    {% for item in extracted_data.get('items', []) %}
+                                    <div class="card mb-3 item-card">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">Item #{{ loop.index }}</h6>
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-item">Remove</button>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="item_name_{{ loop.index0 }}" class="form-label">Item Name</label>
+                                                        <input type="text" class="form-control" 
+                                                               id="item_name_{{ loop.index0 }}" 
+                                                               name="item_name_{{ loop.index0 }}" 
+                                                               value="{{ item.get('name', '') }}">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="item_sku_{{ loop.index0 }}" class="form-label">SKU</label>
+                                                        <input type="text" class="form-control" 
+                                                               id="item_sku_{{ loop.index0 }}" 
+                                                               name="item_sku_{{ loop.index0 }}" 
+                                                               value="{{ item.get('sku', '') }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <div class="mb-3">
+                                                        <label for="item_condition_{{ loop.index0 }}" class="form-label">Condition</label>
+                                                        <select class="form-select" 
+                                                                id="item_condition_{{ loop.index0 }}" 
+                                                                name="item_condition_{{ loop.index0 }}">
+                                                            <option value="">-- Select Condition --</option>
+                                                            <option value="new" {% if item.get('condition') == 'new' %}selected{% endif %}>New</option>
+                                                            <option value="used" {% if item.get('condition') == 'used' %}selected{% endif %}>Used</option>
+                                                            <option value="refurbished" {% if item.get('condition') == 'refurbished' %}selected{% endif %}>Refurbished</option>
+                                                            <option value="damaged" {% if item.get('condition') == 'damaged' %}selected{% endif %}>Damaged</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="mb-3">
+                                                        <label for="item_quantity_{{ loop.index0 }}" class="form-label">Quantity</label>
+                                                        <input type="number" min="1" class="form-control" 
+                                                               id="item_quantity_{{ loop.index0 }}" 
+                                                               name="item_quantity_{{ loop.index0 }}" 
+                                                               value="{{ item.get('quantity', 1) }}">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="mb-3">
+                                                        <label for="item_price_{{ loop.index0 }}" class="form-label">Price</label>
+                                                        <input type="number" step="0.01" class="form-control" 
+                                                               id="item_price_{{ loop.index0 }}" 
+                                                               name="item_price_{{ loop.index0 }}" 
+                                                               value="{{ item.get('price', 0) }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-warning">
+                                        No items detected. Click "Add Item" to add items manually.
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <button type="button" id="add-item-btn" class="btn btn-outline-primary">
+                                        <i class="fas fa-plus"></i> Add Item
+                                    </button>
+                                </div>
+                                
+                                <div class="d-grid gap-2 mt-4">
+                                    <button type="submit" class="btn btn-success">Import Items to Inventory</button>
+                                    <a href="{{ url_for('documents.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Transaction Tab -->
+                        <div class="tab-pane fade" id="transaction" role="tabpanel">
+                            <form method="POST" id="transactionForm">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="action" value="transaction">
+                                
+                                <div class="mb-3">
+                                    <label for="listing_id" class="form-label">Select Listing</label>
+                                    <select class="form-select" id="listing_id" name="listing_id" required>
+                                        <option value="">-- Select a listing --</option>
+                                        {% for listing in active_listings %}
+                                        <option value="{{ listing.id }}">
+                                            {{ listing.item.name }} - {{ listing.listing_price }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="final_sale_price" class="form-label">
+                                        Final Sale Price
+                                        {% if confidence_scores.get('total') is not none %}
+                                        <span class="badge {% if confidence_scores.get('total', 0) > 0.8 %}bg-success{% elif confidence_scores.get('total', 0) > 0.5 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ (confidence_scores.get('total', 0) * 100)|round|int }}% confidence
+                                        </span>
+                                        {% endif %}
+                                    </label>
+                                    <input type="number" step="0.01" class="form-control" id="final_sale_price" 
+                                           name="final_sale_price" value="{{ extracted_data.get('total', 0) }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="tax_amount" class="form-label">
+                                        Tax Amount
+                                        {% if confidence_scores.get('tax_amount') is not none %}
+                                        <span class="badge {% if confidence_scores.get('tax_amount', 0) > 0.8 %}bg-success{% elif confidence_scores.get('tax_amount', 0) > 0.5 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ (confidence_scores.get('tax_amount', 0) * 100)|round|int }}% confidence
+                                        </span>
+                                        {% endif %}
+                                    </label>
+                                    <input type="number" step="0.01" class="form-control" id="tax_amount" 
+                                           name="tax_amount" value="{{ extracted_data.get('tax_amount', 0) or 0 }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="platform_fee" class="form-label">
+                                        Platform Fee
+                                        {% if confidence_scores.get('platform_fee') is not none %}
+                                        <span class="badge {% if confidence_scores.get('platform_fee', 0) > 0.8 %}bg-success{% elif confidence_scores.get('platform_fee', 0) > 0.5 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ (confidence_scores.get('platform_fee', 0) * 100)|round|int }}% confidence
+                                        </span>
+                                        {% endif %}
+                                    </label>
+                                    <input type="number" step="0.01" class="form-control" id="platform_fee" 
+                                           name="platform_fee" value="{{ extracted_data.get('platform_fee', 0) or 0 }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="shipping_cost" class="form-label">
+                                        Shipping Cost
+                                        {% if confidence_scores.get('shipping_cost') is not none %}
+                                        <span class="badge {% if confidence_scores.get('shipping_cost', 0) > 0.8 %}bg-success{% elif confidence_scores.get('shipping_cost', 0) > 0.5 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ (confidence_scores.get('shipping_cost', 0) * 100)|round|int }}% confidence
+                                        </span>
+                                        {% endif %}
+                                    </label>
+                                    <input type="number" step="0.01" class="form-control" id="shipping_cost" 
+                                           name="shipping_cost" value="{{ extracted_data.get('shipping_cost', 0) or 0 }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="other_fees" class="form-label">Other Fees</label>
+                                    <input type="number" step="0.01" class="form-control" id="other_fees" 
+                                           name="other_fees" value="{{ extracted_data.get('other_fees', 0) or 0 }}">
+                                </div>
+                                
+                                <div class="d-grid gap-2 mt-4">
+                                    <button type="submit" class="btn btn-success">Record Transaction</button>
+                                    <a href="{{ url_for('documents.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Document Image</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if document_path %}
+                    <img src="{{ url_for('documents.get_image', filename=document_path) }}" 
+                         class="img-fluid border" alt="Document Image">
+                    {% else %}
+                    <p class="text-muted">No image available</p>
+                    {% endif %}
+                </div>
+                {% if receipt_classification %}
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>
+                            <strong>Receipt Type:</strong> 
+                            <span class="badge bg-info">{{ receipt_classification.receipt_type|title }}</span>
+                        </span>
+                        <span>
+                            <strong>Source Type:</strong> 
+                            <span class="badge bg-secondary">{{ receipt_classification.source_type|title }}</span>
+                        </span>
+                        <span>
+                            <strong>Confidence:</strong> 
+                            <span class="badge {% if receipt_classification.confidence > 0.7 %}bg-success{% elif receipt_classification.confidence > 0.4 %}bg-warning{% else %}bg-danger{% endif %}">
+                                {{ (receipt_classification.confidence * 100)|round|int }}%
+                            </span>
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Extracted Text</h5>
+                </div>
+                <div class="card-body">
+                    <pre class="text-muted" style="white-space: pre-wrap; font-size: 0.8rem;">{{ ocr_text }}</pre>
+                </div>
+            </div>
+            
+            {% if extracted_data.get('validation_flags') %}
+            <div class="card mt-4">
+                <div class="card-header bg-warning">
+                    <h5 class="card-title mb-0">Validation Warnings</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% if extracted_data.get('validation_flags', {}).get('total_mismatch') %}
+                        <li class="list-group-item">
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                            <strong>Total Mismatch:</strong> The extracted total 
+                            ({{ extracted_data.validation_flags.total_mismatch.extracted_total }}) 
+                            doesn't match the sum of items 
+                            ({{ extracted_data.validation_flags.total_mismatch.calculated_total }})
+                        </li>
+                        {% endif %}
+                        
+                        {% if extracted_data.get('validation_flags', {}).get('future_date') %}
+                        <li class="list-group-item">
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                            <strong>Future Date:</strong> The extracted date is in the future
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle platform selection
+        const platformSelect = document.getElementById('platform_name');
+        const newPlatformFields = document.getElementById('new_platform_fields');
+        
+        platformSelect.addEventListener('change', function() {
+            if (this.value === 'new') {
+                newPlatformFields.style.display = 'flex';
+            } else {
+                newPlatformFields.style.display = 'none';
+            }
+        });
+        
+        // Initialize platform fields visibility
+        if (platformSelect.value === 'new') {
+            newPlatformFields.style.display = 'flex';
+        }
+        
+        // Handle add item button
+        const addItemBtn = document.getElementById('add-item-btn');
+        const itemsContainer = document.getElementById('items-container');
+        const itemsCountInput = document.querySelector('input[name="items_count"]');
+        
+        addItemBtn.addEventListener('click', function() {
+            const itemCount = parseInt(itemsCountInput.value || '0');
+            const newIndex = itemCount;
+            
+            const itemCard = document.createElement('div');
+            itemCard.className = 'card mb-3 item-card';
+            itemCard.innerHTML = `
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Item #${newIndex + 1}</h6>
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-item">Remove</button>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="item_name_${newIndex}" class="form-label">Item Name</label>
+                                <input type="text" class="form-control" 
+                                       id="item_name_${newIndex}" 
+                                       name="item_name_${newIndex}" 
+                                       value="">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="item_sku_${newIndex}" class="form-label">SKU</label>
+                                <input type="text" class="form-control" 
+                                       id="item_sku_${newIndex}" 
+                                       name="item_sku_${newIndex}" 
+                                       value="">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="item_condition_${newIndex}" class="form-label">Condition</label>
+                                <select class="form-select" 
+                                        id="item_condition_${newIndex}" 
+                                        name="item_condition_${newIndex}">
+                                    <option value="">-- Select Condition --</option>
+                                    <option value="new">New</option>
+                                    <option value="used">Used</option>
+                                    <option value="refurbished">Refurbished</option>
+                                    <option value="damaged">Damaged</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="item_quantity_${newIndex}" class="form-label">Quantity</label>
+                                <input type="number" min="1" class="form-control" 
+                                       id="item_quantity_${newIndex}" 
+                                       name="item_quantity_${newIndex}" 
+                                       value="1">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="item_price_${newIndex}" class="form-label">Price</label>
+                                <input type="number" step="0.01" class="form-control" 
+                                       id="item_price_${newIndex}" 
+                                       name="item_price_${newIndex}" 
+                                       value="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            itemsContainer.appendChild(itemCard);
+            itemsCountInput.value = newIndex + 1;
+            
+            // Add event listener to the new remove button
+            const removeBtn = itemCard.querySelector('.remove-item');
+            removeBtn.addEventListener('click', function() {
+                itemCard.remove();
+                updateItemsCount();
+            });
+        });
+        
+        // Handle remove item buttons
+        document.querySelectorAll('.remove-item').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.item-card').remove();
+                updateItemsCount();
+            });
+        });
+        
+        // Update items count when items are removed
+        function updateItemsCount() {
+            const itemCards = document.querySelectorAll('.item-card');
+            itemsCountInput.value = itemCards.length;
+            
+            // Update item numbers
+            itemCards.forEach((card, index) => {
+                card.querySelector('h6').textContent = `Item #${index + 1}`;
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}
