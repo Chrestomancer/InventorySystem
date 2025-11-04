@@ -88,22 +88,27 @@ def review():
         try:
             # Get form data
             action = request.form.get('action', 'inventory')
+            redirect_target = None
 
             if action == 'inventory':
                 # Process as inventory items
                 process_as_inventory(request.form, extracted_data)
                 flash('Items imported successfully to inventory', 'success')
-                return redirect(url_for('inventory.index'))
+                redirect_target = url_for('inventory.index')
 
             elif action == 'transaction':
                 # Process as a sales transaction
                 process_as_transaction(request.form)
                 flash('Transaction recorded successfully', 'success')
-                return redirect(url_for('sales.index'))
+                redirect_target = url_for('sales.index')
+            else:
+                flash('Invalid action specified for document processing', 'danger')
 
-            # Clear session data
-            session.pop('document_results', None)
-            session.pop('document_path', None)
+            if redirect_target:
+                # Clear session data before redirecting
+                session.pop('document_results', None)
+                session.pop('document_path', None)
+                return redirect(redirect_target)
 
         except Exception as e:
             db.session.rollback()

@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
+from sqlalchemy import or_
 from app import db
 from app.models.inventory import Item, Listing, SaleTransaction, SalesPlatform
 from datetime import datetime
@@ -11,8 +12,63 @@ sales_bp = Blueprint('sales', __name__)
 @login_required
 def index():
     """List all listings"""
-    listings = Listing.query.all()
-    return render_template('sales/index.html', listings=listings)
+    query = Listing.query.join(Item).join(SalesPlatform)
+
+    platform_id = request.args.get('platform', type=int)
+    status = request.args.get('status', type=str)
+    search_term = (request.args.get('search') or '').strip()
+    price_min_raw = request.args.get('price_min', '').strip()
+    price_max_raw = request.args.get('price_max', '').strip()
+
+    price_min = None
+    price_max = None
+
+    try:
+        if price_min_raw:
+            price_min = float(price_min_raw)
+    except ValueError:
+        price_min_raw = ''
+
+    try:
+        if price_max_raw:
+            price_max = float(price_max_raw)
+    except ValueError:
+        price_max_raw = ''
+
+    if platform_id:
+        query = query.filter(Listing.platform_id == platform_id)
+
+    if status:
+        query = query.filter(Listing.status == status)
+
+    if price_min is not None:
+        query = query.filter(Listing.listing_price >= price_min)
+
+    if price_max is not None:
+        query = query.filter(Listing.listing_price <= price_max)
+
+    if search_term:
+        like_term = f"%{search_term}%"
+        query = query.filter(or_(Item.name.ilike(like_term), Item.sku.ilike(like_term)))
+
+    listings = query.order_by(Listing.date_listed.desc()).all()
+    platforms = SalesPlatform.query.order_by(SalesPlatform.name).all()
+    status_rows = db.session.query(Listing.status).distinct().order_by(Listing.status).all()
+    statuses = [row[0] for row in status_rows if row[0]]
+
+    filters = {
+        'platform': platform_id,
+        'status': status,
+        'search': search_term,
+        'price_min': price_min_raw,
+        'price_max': price_max_raw
+    }
+
+    return render_template('sales/index.html',
+                           listings=listings,
+                           platforms=platforms,
+                           statuses=statuses,
+                           filters=filters)
 
 @sales_bp.route('/listing/<int:listing_id>')
 @login_required

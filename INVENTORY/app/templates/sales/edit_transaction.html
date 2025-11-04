@@ -20,8 +20,11 @@
                     <h5 class="mb-0">Edit Transaction for {{ transaction.listing.item.name }}</h5>
                 </div>
                 <div class="card-body">
+                    {% set fee_percentage = (transaction.listing.platform.fee_percentage if transaction.listing and transaction.listing.platform else 0) %}
                     <form method="POST" action="{{ url_for('sales.edit_transaction', transaction_id=transaction.id) }}" class="needs-validation" novalidate>
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" id="cost_price" value="{{ '%.2f'|format(transaction.listing.item.cost_price) }}">
+                        <input type="hidden" id="platform_fee_percentage" value="{{ '%.4f'|format(fee_percentage or 0) }}">
                         
                         <div class="row mb-3">
                             <div class="col-md-6">
@@ -41,7 +44,7 @@
                             <label for="final_sale_price" class="form-label">Final Sale Price</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="final_sale_price" name="final_sale_price" step="0.01" min="0" value="{{ transaction.final_sale_price }}" required>
+                                <input type="number" class="form-control" id="final_sale_price" name="final_sale_price" step="0.01" min="0" value="{{ transaction.final_sale_price }}" data-fee-percentage="{{ fee_percentage or 0 }}" required>
                                 <div class="invalid-feedback">
                                     Please enter the final sale price.
                                 </div>
@@ -84,6 +87,31 @@
                             <div class="form-text">Any other fees or costs associated with this sale</div>
                         </div>
                         
+                        {% set existing_profit = transaction.calculate_profit() %}
+                        {% set existing_margin = transaction.calculate_profit_margin() %}
+
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <h6 class="card-title mb-3">
+                                    <i class="fas fa-calculator me-2"></i>Profit Preview
+                                </h6>
+                                <div class="row g-3 align-items-center">
+                                    <div class="col-md-6">
+                                        <div class="d-flex flex-column">
+                                            <span class="text-muted">Estimated Profit</span>
+                                            <span id="profit" class="fw-semibold">{{ '$%.2f'|format(existing_profit) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex flex-column">
+                                            <span class="text-muted">Profit Margin</span>
+                                            <span id="profit_margin" class="fw-semibold">{{ '%.2f'|format(existing_margin) }}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <a href="{{ url_for('sales.view_transaction', transaction_id=transaction.id) }}" class="btn btn-secondary me-md-2">Cancel</a>
                             <button type="submit" class="btn btn-primary">

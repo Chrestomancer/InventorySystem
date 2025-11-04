@@ -20,6 +20,49 @@
             <h5 class="mb-0">All Listings</h5>
         </div>
         <div class="card-body">
+            <form method="get" class="row gy-3 gx-3 align-items-end mb-4">
+                <div class="col-md-3">
+                    <label for="filter-platform" class="form-label">Platform</label>
+                    <select id="filter-platform" name="platform" class="form-select">
+                        <option value="">All platforms</option>
+                        {% for platform in platforms %}
+                            <option value="{{ platform.id }}" {% if filters.platform == platform.id %}selected{% endif %}>{{ platform.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filter-status" class="form-label">Status</label>
+                    <select id="filter-status" name="status" class="form-select">
+                        <option value="">All statuses</option>
+                        {% for status_option in statuses %}
+                            <option value="{{ status_option }}" {% if filters.status == status_option %}selected{% endif %}>{{ status_option|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="filter-price-min" class="form-label">Min Price</label>
+                    <input type="number" step="0.01" min="0" class="form-control" id="filter-price-min" name="price_min" value="{{ filters.price_min }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="filter-price-max" class="form-label">Max Price</label>
+                    <input type="number" step="0.01" min="0" class="form-control" id="filter-price-max" name="price_max" value="{{ filters.price_max }}">
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <label for="filter-search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="filter-search" name="search" placeholder="Search by name or SKU" value="{{ filters.search }}">
+                </div>
+                <div class="col-md-3 col-lg-2 d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-2"></i>Apply Filters
+                    </button>
+                </div>
+                <div class="col-md-3 col-lg-2 d-grid">
+                    <a href="{{ url_for('sales.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-undo me-2"></i>Clear
+                    </a>
+                </div>
+            </form>
+
             {% if listings %}
             <div class="table-responsive">
                 <table class="table table-striped table-hover">
