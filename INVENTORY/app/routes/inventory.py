@@ -165,6 +165,8 @@ def edit_inventory_record(record_id):
             flash('Invalid quantity value', 'danger')
             return redirect(url_for('inventory.edit_inventory_record', record_id=record_id))
         location = request.form.get('location')
+
+        # Update record
         record.quantity = quantity
         record.location = location
 
@@ -209,6 +211,8 @@ def add_platform():
         except (ValueError, TypeError):
             flash('Invalid fee percentage value', 'danger')
             return redirect(url_for('inventory.add_platform'))
+
+        # Check if platform already exists
         if SalesPlatform.query.filter_by(name=name).first():
             flash('A platform with this name already exists', 'danger')
             return redirect(url_for('inventory.add_platform'))
@@ -242,7 +246,9 @@ def edit_platform(platform_id):
             fee_percentage = float(request.form.get('fee_percentage', 0))
         except (ValueError, TypeError):
             flash('Invalid fee percentage value', 'danger')
-            return redirect(url_for('inventory.edit_platform', platform_id=platform_id)) (for another platform)
+            return redirect(url_for('inventory.edit_platform', platform_id=platform_id))
+
+        # Check if platform name already exists (for another platform)
         name_exists = SalesPlatform.query.filter(
             SalesPlatform.name == name, 
             SalesPlatform.id != platform_id
