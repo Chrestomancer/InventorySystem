@@ -53,7 +53,7 @@
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-3 fw-bold">Cost Price:</div>
-                    <div class="col-md-9">${{ "%.2f"|format(item.cost_price) }}</div>
+                    <div class="col-md-9">{{ item.cost_price|currency }}</div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-3 fw-bold">Date Added:</div>
@@ -101,7 +101,7 @@
                 
                 <div class="d-flex justify-content-between mb-3">
                     <div>
-                        <h5 class="mb-0">${{ "%.2f"|format(item.cost_price * item.current_quantity()) }}</h5>
+                        <h5 class="mb-0">{{ (item.cost_price * item.current_quantity())|currency }}</h5>
                         <p class="text-muted mb-0">Total Value</p>
                     </div>
                     <div class="text-end">
@@ -124,7 +124,7 @@
                     <a href="{{ url_for('sales.add_listing', item_id=item.id) }}" class="btn btn-outline-primary">
                         <i class="fas fa-tag me-2"></i>Create Listing
                     </a>
-                    <button type="button" class="btn btn-outline-danger delete-confirm" data-bs-toggle="modal" data-bs-target="#deleteItemModal">
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteItemModal">
                         <i class="fas fa-trash me-2"></i>Delete Item
                     </button>
                 </div>
@@ -166,7 +166,7 @@
                                     <a href="{{ url_for('inventory.edit_inventory_record', record_id=record.id) }}" class="btn btn-primary" data-bs-toggle="tooltip" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" class="btn btn-danger delete-confirm" data-bs-toggle="modal" data-bs-target="#deleteRecordModal{{ record.id }}" data-bs-toggle="tooltip" title="Delete">
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteRecordModal{{ record.id }}" title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -239,7 +239,7 @@
                         {% for listing in listings %}
                         <tr>
                             <td>{{ listing.platform.name }}</td>
-                            <td>${{ "%.2f"|format(listing.listing_price) }}</td>
+                            <td>{{ listing.listing_price|currency }}</td>
                             <td>
                                 {% if listing.status == 'active' %}
                                     <span class="badge bg-success">Active</span>
@@ -266,7 +266,7 @@
                                         <i class="fas fa-dollar-sign"></i>
                                     </a>
                                     {% endif %}
-                                    <button type="button" class="btn btn-danger delete-confirm" data-bs-toggle="modal" data-bs-target="#deleteListingModal{{ listing.id }}" data-bs-toggle="tooltip" title="Delete">
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteListingModal{{ listing.id }}" title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>

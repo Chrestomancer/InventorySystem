@@ -66,7 +66,9 @@ def register_filters(app):
         """Convert newlines to <br> tags."""
         if value is None:
             return ''
-        return Markup(value.replace('\n', '<br>'))
+        # Escape HTML first to prevent XSS, then replace newlines
+        escaped = Markup.escape(value)
+        return Markup(escaped.replace('\n', '<br>'))
     
     @app.template_filter('truncate_words')
     def truncate_words_filter(value, length=30):

@@ -74,7 +74,7 @@
                             <td>{{ item.sku }}</td>
                             <td>{{ item.condition }}</td>
                             <td>{{ item.current_quantity() }}</td>
-                            <td>${{ "%.2f"|format(item.cost_price) }}</td>
+                            <td>{{ item.cost_price|currency }}</td>
                             <td>{{ item.time_in_stock() }} days</td>
                             <td>
                                 <div class="btn-group btn-group-sm">
@@ -87,7 +87,7 @@
                                     <a href="{{ url_for('sales.add_listing', item_id=item.id) }}" class="btn btn-success" data-bs-toggle="tooltip" title="Create Listing">
                                         <i class="fas fa-tag"></i>
                                     </a>
-                                    <button type="button" class="btn btn-danger delete-confirm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ item.id }}" data-bs-toggle="tooltip" title="Delete">
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ item.id }}" title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>

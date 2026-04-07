@@ -180,7 +180,7 @@
                                         </a>
                                     </td>
                                     <td>{{ item.sku }}</td>
-                                    <td>${{ "%.2f"|format(item.cost_price) }}</td>
+                                    <td>{{ item.cost_price|currency }}</td>
                                     <td>{{ item.created_at.strftime('%Y-%m-%d') }}</td>
                                 </tr>
                                 {% endfor %}
@@ -225,7 +225,7 @@
                                         </a>
                                     </td>
                                     <td>{{ sale.listing.platform.name }}</td>
-                                    <td>${{ "%.2f"|format(sale.final_sale_price) }}</td>
+                                    <td>{{ sale.final_sale_price|currency }}</td>
                                     <td>{{ sale.date_sold.strftime('%Y-%m-%d') }}</td>
                                 </tr>
                                 {% endfor %}
