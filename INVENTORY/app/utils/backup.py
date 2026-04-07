@@ -92,7 +92,10 @@ def list_backups():
 
 def restore_backup(backup_filename):
     """Restore the database from a backup file"""
+    # Sanitize filename to prevent path traversal
+    backup_filename = os.path.basename(backup_filename)
     backup_dir = os.path.join(current_app.root_path, '..', 'backups')
+    backup_dir = os.path.realpath(backup_dir)
     backup_path = os.path.join(backup_dir, backup_filename)
     
     if not os.path.exists(backup_path):

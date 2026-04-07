@@ -33,7 +33,12 @@ def add_item():
         description = request.form.get('description')
         sku = request.form.get('sku')
         condition = request.form.get('condition')
-        cost_price = float(request.form.get('cost_price', 0))
+
+        try:
+            cost_price = float(request.form.get('cost_price', 0))
+        except (ValueError, TypeError):
+            flash('Invalid cost price value', 'danger')
+            return redirect(url_for('inventory.add_item'))
 
         # Check if SKU already exists
         if sku and Item.query.filter_by(sku=sku).first():
@@ -68,7 +73,12 @@ def edit_item(item_id):
         description = request.form.get('description')
         sku = request.form.get('sku')
         condition = request.form.get('condition')
-        cost_price = float(request.form.get('cost_price', 0))
+
+        try:
+            cost_price = float(request.form.get('cost_price', 0))
+        except (ValueError, TypeError):
+            flash('Invalid cost price value', 'danger')
+            return redirect(url_for('inventory.edit_item', item_id=item_id))
 
         # Check if SKU already exists (for another item)
         sku_exists = Item.query.filter(Item.sku == sku, Item.id != item_id).first()
@@ -120,7 +130,11 @@ def add_inventory_record(item_id):
     item = Item.query.get_or_404(item_id)
 
     if request.method == 'POST':
-        quantity = int(request.form.get('quantity', 0))
+        try:
+            quantity = int(request.form.get('quantity', 0))
+        except (ValueError, TypeError):
+            flash('Invalid quantity value', 'danger')
+            return redirect(url_for('inventory.add_inventory_record', item_id=item_id))
         location = request.form.get('location')
 
         # Create new inventory record
@@ -145,10 +159,12 @@ def edit_inventory_record(record_id):
     record = InventoryRecord.query.get_or_404(record_id)
 
     if request.method == 'POST':
-        quantity = int(request.form.get('quantity', 0))
+        try:
+            quantity = int(request.form.get('quantity', 0))
+        except (ValueError, TypeError):
+            flash('Invalid quantity value', 'danger')
+            return redirect(url_for('inventory.edit_inventory_record', record_id=record_id))
         location = request.form.get('location')
-
-        # Update record
         record.quantity = quantity
         record.location = location
 
@@ -187,9 +203,12 @@ def add_platform():
     if request.method == 'POST':
         name = request.form.get('name')
         url = request.form.get('url')
-        fee_percentage = float(request.form.get('fee_percentage', 0))
 
-        # Check if platform already exists
+        try:
+            fee_percentage = float(request.form.get('fee_percentage', 0))
+        except (ValueError, TypeError):
+            flash('Invalid fee percentage value', 'danger')
+            return redirect(url_for('inventory.add_platform'))
         if SalesPlatform.query.filter_by(name=name).first():
             flash('A platform with this name already exists', 'danger')
             return redirect(url_for('inventory.add_platform'))
@@ -218,9 +237,12 @@ def edit_platform(platform_id):
     if request.method == 'POST':
         name = request.form.get('name')
         url = request.form.get('url')
-        fee_percentage = float(request.form.get('fee_percentage', 0))
 
-        # Check if platform name already exists (for another platform)
+        try:
+            fee_percentage = float(request.form.get('fee_percentage', 0))
+        except (ValueError, TypeError):
+            flash('Invalid fee percentage value', 'danger')
+            return redirect(url_for('inventory.edit_platform', platform_id=platform_id)) (for another platform)
         name_exists = SalesPlatform.query.filter(
             SalesPlatform.name == name, 
             SalesPlatform.id != platform_id

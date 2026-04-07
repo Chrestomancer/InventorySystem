@@ -86,9 +86,13 @@ def add_listing(item_id):
     platforms = SalesPlatform.query.all()
     
     if request.method == 'POST':
-        platform_id = int(request.form.get('platform_id'))
+        try:
+            platform_id = int(request.form.get('platform_id'))
+            listing_price = float(request.form.get('listing_price', 0))
+        except (ValueError, TypeError):
+            flash('Invalid numeric value provided', 'danger')
+            return redirect(url_for('sales.add_listing', item_id=item_id))
         listing_url = request.form.get('listing_url')
-        listing_price = float(request.form.get('listing_price', 0))
         
         # Create new listing
         listing = Listing(
@@ -116,9 +120,13 @@ def edit_listing(listing_id):
     platforms = SalesPlatform.query.all()
     
     if request.method == 'POST':
-        platform_id = int(request.form.get('platform_id'))
+        try:
+            platform_id = int(request.form.get('platform_id'))
+            listing_price = float(request.form.get('listing_price', 0))
+        except (ValueError, TypeError):
+            flash('Invalid numeric value provided', 'danger')
+            return redirect(url_for('sales.edit_listing', listing_id=listing_id))
         listing_url = request.form.get('listing_url')
-        listing_price = float(request.form.get('listing_price', 0))
         status = request.form.get('status')
         
         # Update listing
@@ -166,11 +174,15 @@ def add_transaction(listing_id):
     listing = Listing.query.get_or_404(listing_id)
     
     if request.method == 'POST':
-        final_sale_price = float(request.form.get('final_sale_price', 0))
-        tax_amount = float(request.form.get('tax_amount', 0))
-        platform_fee = float(request.form.get('platform_fee', 0))
-        shipping_cost = float(request.form.get('shipping_cost', 0))
-        other_fees = float(request.form.get('other_fees', 0))
+        try:
+            final_sale_price = float(request.form.get('final_sale_price', 0))
+            tax_amount = float(request.form.get('tax_amount', 0))
+            platform_fee = float(request.form.get('platform_fee', 0))
+            shipping_cost = float(request.form.get('shipping_cost', 0))
+            other_fees = float(request.form.get('other_fees', 0))
+        except (ValueError, TypeError):
+            flash('Invalid numeric value provided', 'danger')
+            return redirect(url_for('sales.add_transaction', listing_id=listing_id))
         
         # Create new transaction
         transaction = SaleTransaction(
@@ -215,11 +227,15 @@ def edit_transaction(transaction_id):
     transaction = SaleTransaction.query.get_or_404(transaction_id)
     
     if request.method == 'POST':
-        final_sale_price = float(request.form.get('final_sale_price', 0))
-        tax_amount = float(request.form.get('tax_amount', 0))
-        platform_fee = float(request.form.get('platform_fee', 0))
-        shipping_cost = float(request.form.get('shipping_cost', 0))
-        other_fees = float(request.form.get('other_fees', 0))
+        try:
+            final_sale_price = float(request.form.get('final_sale_price', 0))
+            tax_amount = float(request.form.get('tax_amount', 0))
+            platform_fee = float(request.form.get('platform_fee', 0))
+            shipping_cost = float(request.form.get('shipping_cost', 0))
+            other_fees = float(request.form.get('other_fees', 0))
+        except (ValueError, TypeError):
+            flash('Invalid numeric value provided', 'danger')
+            return redirect(url_for('sales.edit_transaction', transaction_id=transaction_id))
         
         # Update transaction
         transaction.final_sale_price = final_sale_price

@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request
 from flask_login import login_required, current_user
 from app import db
+from sqlalchemy import func
 
 main_bp = Blueprint('main', __name__)
 
@@ -48,9 +49,8 @@ def dashboard():
     active_listings = Listing.query.filter_by(status='active').count()
     sold_items = Listing.query.filter_by(status='sold').count()
 
-    # Calculate total sales and profit
-    total_sales_result = db.session.execute('SELECT SUM(final_sale_price) FROM sale_transactions')
-    total_sales = total_sales_result.scalar() or 0
+    # Calculate total sales and profit using ORM
+    total_sales = db.session.query(func.sum(SaleTransaction.final_sale_price)).scalar() or 0
 
     total_profit = 0
     for transaction in SaleTransaction.query.all():

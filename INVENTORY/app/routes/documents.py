@@ -220,6 +220,7 @@ def process_as_transaction(form_data):
 @login_required
 def get_image(filename):
     """Serve the uploaded image"""
-    directory = os.path.dirname(filename)
-    filename = os.path.basename(filename)
-    return send_from_directory(directory, filename)
+    # Restrict to the uploads directory to prevent path traversal
+    upload_folder = os.path.realpath(os.path.join(current_app.root_path, '..', 'uploads', 'documents'))
+    safe_filename = os.path.basename(filename)
+    return send_from_directory(upload_folder, safe_filename)

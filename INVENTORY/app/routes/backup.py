@@ -25,8 +25,11 @@ def create():
         return redirect(url_for('main.dashboard'))
 
     custom_name = request.form.get('backup_name')
-    if custom_name and not custom_name.endswith('.db'):
-        custom_name += '.db'
+    if custom_name:
+        # Sanitize the backup name to prevent path traversal
+        custom_name = os.path.basename(custom_name)
+        if not custom_name.endswith('.db'):
+            custom_name += '.db'
 
     try:
         backup_path = create_backup(custom_name)
@@ -60,7 +63,10 @@ def download(filename):
         flash('You do not have permission to perform this action.', 'danger')
         return redirect(url_for('main.dashboard'))
 
+    # Sanitize filename to prevent path traversal
+    filename = os.path.basename(filename)
     backup_dir = os.path.join(current_app.root_path, '..', 'backups')
+    backup_dir = os.path.realpath(backup_dir)
     return send_from_directory(backup_dir, filename, as_attachment=True)
 
 @backup_bp.route('/delete/<filename>', methods=['POST'])
@@ -71,7 +77,10 @@ def delete(filename):
         flash('You do not have permission to perform this action.', 'danger')
         return redirect(url_for('main.dashboard'))
 
+    # Sanitize filename to prevent path traversal
+    filename = os.path.basename(filename)
     backup_dir = os.path.join(current_app.root_path, '..', 'backups')
+    backup_dir = os.path.realpath(backup_dir)
     backup_path = os.path.join(backup_dir, filename)
 
     if os.path.exists(backup_path):
@@ -91,6 +100,12 @@ def schedule():
         return redirect(url_for('main.dashboard'))
 
     schedule_type = request.form.get('schedule_type')
+
+    # Validate schedule type to prevent injection
+    allowed_schedule_types = ['none', 'daily', 'weekly', 'monthly']
+    if schedule_type not in allowed_schedule_types:
+        flash('Invalid schedule type', 'danger')
+        return redirect(url_for('backup.index'))
 
     # Store the schedule setting in a file
     schedule_file = os.path.join(current_app.root_path, '..', 'backups', 'schedule.txt')
