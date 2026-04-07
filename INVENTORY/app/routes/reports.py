@@ -57,12 +57,18 @@ def profit_loss():
     end_date_str = request.args.get('end_date')
     
     if start_date_str:
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        except ValueError:
+            start_date = datetime.utcnow() - timedelta(days=30)
     else:
         start_date = datetime.utcnow() - timedelta(days=30)
     
     if end_date_str:
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+        try:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+        except ValueError:
+            end_date = datetime.utcnow()
     else:
         end_date = datetime.utcnow()
 
@@ -148,12 +154,18 @@ def sales_by_platform():
     end_date_str = request.args.get('end_date')
     
     if start_date_str:
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        except ValueError:
+            start_date = datetime.utcnow() - timedelta(days=30)
     else:
         start_date = datetime.utcnow() - timedelta(days=30)
     
     if end_date_str:
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+        try:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+        except ValueError:
+            end_date = datetime.utcnow()
     else:
         end_date = datetime.utcnow()
     

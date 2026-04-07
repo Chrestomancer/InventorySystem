@@ -6,6 +6,22 @@ from flask import send_file
 from app import db
 from app.models.inventory import Item, InventoryRecord, SalesPlatform, Listing, SaleTransaction
 
+
+def _sanitize_cell(value):
+    """Sanitize cell value to prevent CSV formula injection.
+    
+    Prefixes potentially dangerous values with a single quote to prevent
+    spreadsheet applications from interpreting them as formulas.
+    """
+    if isinstance(value, str) and value and value[0] in ('=', '+', '-', '@', '\t', '\r'):
+        return "'" + value
+    return value
+
+
+def _sanitize_dataframe(df):
+    """Apply formula injection sanitization to all string cells in a DataFrame."""
+    return df.map(lambda x: _sanitize_cell(x) if isinstance(x, str) else x)
+
 def detect_file_type(file):
     """Detect if file is Excel or CSV based on filename"""
     filename = file.filename.lower()
@@ -43,6 +59,7 @@ def export_data(data_type, file_format='excel'):
         raise ValueError(f"Unknown data type: {data_type}")
     
     # Export to requested format
+    df = _sanitize_dataframe(df)
     output = io.BytesIO()
     if file_format == 'excel':
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
@@ -70,10 +87,10 @@ def export_all_data(file_format='excel'):
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             # Add each data type to a separate sheet
             dfs = {
-                'Items': get_inventory_data(),
-                'Platforms': get_platforms_data(),
-                'Listings': get_listings_data(),
-                'Transactions': get_transactions_data()
+                'Items': _sanitize_dataframe(get_inventory_data()),
+                'Platforms': _sanitize_dataframe(get_platforms_data()),
+                'Listings': _sanitize_dataframe(get_listings_data()),
+                'Transactions': _sanitize_dataframe(get_transactions_data())
             }
             
             for sheet_name, df in dfs.items():
@@ -97,10 +114,10 @@ def export_all_data(file_format='excel'):
         with zipfile.ZipFile(output, 'w') as zipf:
             # Add each data type to a separate CSV file in the zip
             dfs = {
-                'items': get_inventory_data(),
-                'platforms': get_platforms_data(),
-                'listings': get_listings_data(),
-                'transactions': get_transactions_data()
+                'items': _sanitize_dataframe(get_inventory_data()),
+                'platforms': _sanitize_dataframe(get_platforms_data()),
+                'listings': _sanitize_dataframe(get_listings_data()),
+                'transactions': _sanitize_dataframe(get_transactions_data())
             }
             
             for name, df in dfs.items():

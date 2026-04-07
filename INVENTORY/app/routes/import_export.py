@@ -40,6 +40,13 @@ def import_data():
         flash('No selected file', 'danger')
         return redirect(url_for('import_export.index'))
 
+    # Validate file extension
+    allowed_extensions = {'.xlsx', '.xls', '.csv'}
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in allowed_extensions:
+        flash('Unsupported file type. Please upload an Excel (.xlsx, .xls) or CSV (.csv) file.', 'danger')
+        return redirect(url_for('import_export.index'))
+
     data_type = request.form.get('data_type', 'inventory')
 
     try:

@@ -75,6 +75,10 @@ def register():
             flash('Passwords do not match', 'danger')
             return redirect(url_for('auth.register'))
 
+        if len(password) < 8:
+            flash('Password must be at least 8 characters long', 'danger')
+            return redirect(url_for('auth.register'))
+
         # Create new user
         user = User(username=username, email=email)
         user.set_password(password)
@@ -126,6 +130,10 @@ def edit_profile():
 
             if new_password != confirm_password:
                 flash('New passwords do not match', 'danger')
+                return redirect(url_for('auth.edit_profile'))
+
+            if len(new_password) < 8:
+                flash('New password must be at least 8 characters long', 'danger')
                 return redirect(url_for('auth.edit_profile'))
 
             current_user.set_password(new_password)
