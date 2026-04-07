@@ -29,6 +29,13 @@ def upload():
         flash('No selected file', 'danger')
         return redirect(url_for('documents.index'))
 
+    # Validate file extension
+    allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif', '.pdf', '.html', '.htm'}
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in allowed_extensions:
+        flash('Unsupported file type. Please upload an image, PDF, or HTML file.', 'danger')
+        return redirect(url_for('documents.index'))
+
     # Create upload folder if it doesn't exist
     upload_folder = os.path.join(current_app.root_path, '..', 'uploads', 'documents')
     os.makedirs(upload_folder, exist_ok=True)
@@ -190,12 +197,15 @@ def process_as_inventory(form_data, extracted_data):
 
 def process_as_transaction(form_data):
     """Process the document data as a sales transaction"""
-    listing_id = int(form_data.get('listing_id'))
-    final_sale_price = float(form_data.get('final_sale_price', 0))
-    tax_amount = float(form_data.get('tax_amount', 0))
-    platform_fee = float(form_data.get('platform_fee', 0))
-    shipping_cost = float(form_data.get('shipping_cost', 0))
-    other_fees = float(form_data.get('other_fees', 0))
+    try:
+        listing_id = int(form_data.get('listing_id'))
+        final_sale_price = float(form_data.get('final_sale_price', 0))
+        tax_amount = float(form_data.get('tax_amount', 0))
+        platform_fee = float(form_data.get('platform_fee', 0))
+        shipping_cost = float(form_data.get('shipping_cost', 0))
+        other_fees = float(form_data.get('other_fees', 0))
+    except (ValueError, TypeError) as e:
+        raise ValueError(f'Invalid numeric value in transaction data: {e}')
 
     # Create new transaction
     transaction = SaleTransaction(

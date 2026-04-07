@@ -208,7 +208,13 @@ def sales_by_platform():
 def monthly_sales():
     """Monthly sales report"""
     # Get year from query parameters (default to current year)
-    year = int(request.args.get('year', datetime.utcnow().year))
+    current_year = datetime.utcnow().year
+    try:
+        year = int(request.args.get('year', current_year))
+    except (ValueError, TypeError):
+        year = current_year
+    # Constrain year to a reasonable range
+    year = max(2000, min(year, current_year + 1))
     
     # Query monthly sales for the year
     monthly_data = []
@@ -253,7 +259,12 @@ def chart_data():
     
     if chart_type == 'monthly_sales':
         # Get year from query parameters (default to current year)
-        year = int(request.args.get('year', datetime.utcnow().year))
+        current_yr = datetime.utcnow().year
+        try:
+            year = int(request.args.get('year', current_yr))
+        except (ValueError, TypeError):
+            year = current_yr
+        year = max(2000, min(year, current_yr + 1))
         
         # Query monthly sales for the year
         monthly_data = []

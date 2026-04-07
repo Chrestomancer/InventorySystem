@@ -75,7 +75,7 @@ def list_backups():
                 tables = cursor.fetchall()
                 conn.close()
                 is_valid = len(tables) > 0
-            except:
+            except Exception:
                 is_valid = False
             
             backups.append({
